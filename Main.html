@@ -2,373 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Basic Calculator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Scientific Calculator UI (Web)</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --key: #1f2937;
-      --key-text: #e5e7eb;
-      --accent: #22c55e;
-      --op: #2563eb;
-      --danger: #ef4444;
-      --display: #0b1220;
+    :root{
+      --bg:#0e0f13;
+      --panel:#1a1c21;
+      --lcd:#d9efe2;
+      --lcd-text:#0b1b12;
+      --ink:#e8e9ee;
+      --muted:#9aa0ac;
+      --accent:#f59e0b;   /* SHIFT */
+      --alpha:#a78bfa;    /* ALPHA */
+      --mode:#6b7280;     /* MODE key */
+      --op:#fbbf24;       /* x, ÷, +, − */
+      --enter:#f59e66;    /* AC/Enter */
+      --danger:#ef4444;   /* CLR ALL */
+      --key:#24262e;
+      --key-2:#2a2d36;
+      --ring:#2f3340;
     }
 
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: radial-gradient(1200px 600px at 10% 10%, #1e293b 0%, #0b1220 40%, #020617 100%);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      color: #e5e7eb;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 700px at 15% 10%, #171922 0%, #0f1117 50%, #0b0c10 100%);
+      color:var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      display:grid; place-items:center; padding:16px;
     }
 
-    .calc {
-      width: min(92vw, 380px);
-      background: linear-gradient(180deg, #0b1220, #0a1020 60%, #070c18);
-      border: 1px solid #1f2937;
-      border-radius: 16px;
-      box-shadow:
-        0 10px 30px rgba(0,0,0,0.6),
-        inset 0 0 0 1px rgba(255,255,255,0.04);
-      overflow: hidden;
+    .calc{
+      width:min(420px, 94vw);
+      background:linear-gradient(180deg,#111318,#0e1016);
+      border:1px solid var(--ring);
+      border-radius:20px;
+      box-shadow:0 18px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03);
+      overflow:hidden;
     }
 
-    .display {
-      padding: 18px 16px 10px 16px;
-      background: linear-gradient(180deg, var(--display), #0a1426);
-      border-bottom: 1px solid #1f2937;
+    /* Header + LCD */
+    .head{
+      padding:10px 12px 8px 12px;
+      display:flex; align-items:center; gap:8px; justify-content:space-between;
+      background:linear-gradient(180deg,#0f1218,#0c0e13);
+      border-bottom:1px solid var(--ring);
+    }
+    .badges{display:flex; gap:6px; flex-wrap:wrap}
+    .badge{
+      font-size:10px; line-height:1; letter-spacing:.2px;
+      padding:5px 7px; border-radius:6px; color:#0f1117; font-weight:700;
+      background:#cbd5e1;
+    }
+    .lcd{
+      margin:10px 12px;
+      background:var(--lcd);
+      color:var(--lcd-text);
+      border-radius:12px;
+      border:1px solid #b7d7c4;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -1px 0 rgba(0,0,0,.05);
+      padding:10px 12px;
+    }
+    .exp{font-size:14px; min-height:22px; color:#3c5d4f; opacity:.9; overflow:hidden; white-space:nowrap; text-overflow:ellipsis}
+    .ans{font-size:28px; font-weight:700; min-height:36px; text-align:right}
+
+    /* Keyboard grid */
+    .keys{
+      padding:12px;
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: 56px;
+      gap:8px;
+      background:linear-gradient(180deg,#0d1016,#0b0d12);
     }
 
-    .expr, .result {
-      width: 100%;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      direction: ltr;
+    button.key{
+      appearance:none; border:1px solid var(--ring); outline:0;
+      background: linear-gradient(180deg,var(--key-2),var(--key));
+      color:var(--ink); border-radius:10px; font-size:15px; font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.03);
+      transition: transform .02s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
+    button.key:hover{border-color:#3a4050; background:linear-gradient(180deg,#2d3040,#282c39)}
+    button.key:active{transform:translateY(1px)}
+    .k-shift{ background: linear-gradient(180deg, rgba(245,158,11,.22), rgba(36,38,46,.9)); border-color: rgba(245,158,11,.45); color:#ffd089}
+    .k-alpha{ background: linear-gradient(180deg, rgba(167,139,250,.22), rgba(36,38,46,.9)); border-color: rgba(167,139,250,.45); color:#e9ddff}
+    .k-mode{ background: linear-gradient(180deg, rgba(107,114,128,.25), rgba(36,38,46,.9)); border-color: rgba(107,114,128,.5); color:#e5e7eb}
+    .k-op{ color:#fff3cf; background: linear-gradient(180deg, rgba(251,191,36,.22), rgba(36,38,46,.9)); border-color: rgba(251,191,36,.5) }
+    .k-enter{ background: linear-gradient(180deg, rgba(245,158,102,.28), rgba(36,38,46,.92)); border-color: rgba(245,158,102,.6); color:#fff }
+    .k-danger{ background: linear-gradient(180deg, rgba(239,68,68,.22), rgba(36,38,46,.9)); border-color: rgba(239,68,68,.55); color:#ffe9e9 }
 
-    .expr {
-      min-height: 28px;
-      font-size: 18px;
-      color: #a5b4fc;
-      opacity: 0.9;
-      letter-spacing: 0.2px;
-    }
+    /* Tall + wide keys like handhelds */
+    .h2{ grid-row: span 2; height: calc(56px*2 + 8px) }
+    .w2{ grid-column: span 2 }
 
-    .result {
-      min-height: 44px;
-      font-size: 32px;
-      line-height: 1.2;
-      font-weight: 600;
-      color: #f8fafc;
-      margin-top: 6px;
-    }
+    /* Small helper legends like yellow/orange micro text */
+    .legend{ display:block; font-size:9px; line-height:1; color:var(--muted); font-weight:600; margin-top:2px }
 
-    .keys {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      padding: 14px;
-      background: linear-gradient(180deg, #0b1220, #0b1220);
-    }
-
-    button.key {
-      appearance: none;
-      border: 1px solid #263142;
-      background: linear-gradient(180deg, #101827, #0f1a2a);
-      color: var(--key-text);
-      height: 56px;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-      cursor: pointer;
-      transition: transform 0.02s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-      box-shadow:
-        0 2px 6px rgba(0,0,0,0.35),
-        inset 0 0 0 1px rgba(255,255,255,0.04);
-    }
-
-    button.key:hover {
-      border-color: #324257;
-      background: linear-gradient(180deg, #122138, #112036);
-    }
-
-    button.key:active {
-      transform: translateY(1px);
-      box-shadow:
-        0 1px 3px rgba(0,0,0,0.5),
-        inset 0 0 0 1px rgba(255,255,255,0.03);
-    }
-
-    .key.op {
-      background: linear-gradient(180deg, rgba(37,99,235,0.18), rgba(17,24,39,0.8));
-      border-color: rgba(37,99,235,0.35);
-      color: #cfe1ff;
-    }
-
-    .key.op:hover {
-      background: linear-gradient(180deg, rgba(37,99,235,0.28), rgba(17,24,39,0.9));
-      border-color: rgba(37,99,235,0.55);
-    }
-
-    .key.equals {
-      background: linear-gradient(180deg, rgba(34,197,94,0.25), rgba(17,24,39,0.85));
-      border-color: rgba(34,197,94,0.45);
-      color: #d5ffe5;
-      grid-column: 4 / 5;
-      grid-row: 4 / span 2;
-      height: 122px;
-      font-size: 20px;
-    }
-
-    .key.equals:hover {
-      background: linear-gradient(180deg, rgba(34,197,94,0.35), rgba(17,24,39,0.9));
-      border-color: rgba(34,197,94,0.7);
-    }
-
-    .key.clear {
-      color: #ffe1e1;
-      background: linear-gradient(180deg, rgba(239,68,68,0.18), rgba(17,24,39,0.8));
-      border-color: rgba(239,68,68,0.35);
-    }
-
-    .key.clear:hover {
-      background: linear-gradient(180deg, rgba(239,68,68,0.28), rgba(17,24,39,0.9));
-      border-color: rgba(239,68,68,0.55);
-    }
-
-    .key.wide {
-      grid-column: span 2;
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
-    }
+    /* Accessibility */
+    .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
   </style>
 </head>
 <body>
-  <main class="calc" role="application" aria-label="Basic calculator">
-    <section class="display" aria-live="polite" aria-atomic="true">
-      <div id="expression" class="expr">0</div>
-      <div id="result" class="result">0</div>
+  <main class="calc" role="application" aria-label="Scientific calculator UI">
+    <header class="head">
+      <div class="badges">
+        <span class="badge">NORM</span>
+        <span class="badge">MATH</span>
+        <span class="badge">DEG</span>
+      </div>
+      <div class="badges">
+        <span class="badge">2nd</span>
+        <span class="badge">SHIFT</span>
+        <span class="badge">ALPHA</span>
+      </div>
+    </header>
+
+    <section class="lcd" aria-live="polite" aria-atomic="true">
+      <div class="exp" id="exp">Ans + 1628</div>
+      <div class="ans" id="ans">1954</div>
     </section>
 
+    <!-- Key matrix (UI only; wire up JS later) -->
     <section class="keys">
-      <!-- Row 1 -->
-      <button class="key clear" data-action="clear" aria-label="Clear">C</button>
-      <button class="key" data-action="backspace" aria-label="Backspace">⌫</button>
-      <button class="key op" data-op="÷" aria-label="Divide">÷</button>
-      <button class="key op" data-op="×" aria-label="Multiply">×</button>
+      <!-- Row: modifiers -->
+      <button class="key k-shift" aria-label="SHIFT">SHIFT</button>
+      <button class="key k-alpha" aria-label="ALPHA">ALPHA</button>
+      <button class="key" aria-label="Left">◀</button>
+      <button class="key" aria-label="Right">▶</button>
+      <button class="key k-mode" aria-label="MODE">MODE</button>
+      <button class="key" aria-label="2nd">2nd</button>
 
-      <!-- Row 2 -->
-      <button class="key" data-num="7">7</button>
-      <button class="key" data-num="8">8</button>
-      <button class="key" data-num="9">9</button>
-      <button class="key op" data-op="+">+</button>
+      <!-- Row: solve / calc set -->
+      <button class="key">CALC<span class="legend">solve</span></button>
+      <button class="key">d/dx</button>
+      <button class="key">∫</button>
+      <button class="key">10ˣ</button>
+      <button class="key">Log,y</button>
+      <button class="key">x!</button>
 
-      <!-- Row 3 -->
-      <button class="key" data-num="4">4</button>
-      <button class="key" data-num="5">5</button>
-      <button class="key" data-num="6">6</button>
-      <button class="key op" data-op="−" aria-label="Minus">−</button>
+      <!-- Row: powers -->
+      <button class="key">xʸ</button>
+      <button class="key">√</button>
+      <button class="key">x²</button>
+      <button class="key">Log</button>
+      <button class="key">Ln</button>
+      <button class="key">eˣ</button>
 
-      <!-- Row 4 -->
-      <button class="key" data-num="1">1</button>
-      <button class="key" data-num="2">2</button>
-      <button class="key" data-num="3">3</button>
-      <button class="key equals" data-action="equals" aria-label="Equals">=</button>
+      <!-- Row: trig -->
+      <button class="key">(−)</button>
+      <button class="key">hyp</button>
+      <button class="key">Sin</button>
+      <button class="key">Cos</button>
+      <button class="key">Tan</button>
+      <button class="key">π</button>
 
-      <!-- Row 5 -->
-      <button class="key wide" data-num="0">0</button>
-      <button class="key" data-num="." aria-label="Decimal point">.</button>
+      <!-- Row: memory / store -->
+      <button class="key">RCL</button>
+      <button class="key">ENG</button>
+      <button class="key">%</button>
+      <button class="key k-op">÷</button>
+      <button class="key k-op">×</button>
+      <button class="key k-danger">CLR ALL</button>
+
+      <!-- Row: 7 8 9 -->
+      <button class="key">7</button>
+      <button class="key">8</button>
+      <button class="key">9</button>
+      <button class="key k-op">−</button>
+      <button class="key k-op">+</button>
+      <button class="key k-enter h2">AC</button>
+
+      <!-- Row: 4 5 6 -->
+      <button class="key">4</button>
+      <button class="key">5</button>
+      <button class="key">6</button>
+      <button class="key">x⁻¹</button>
+      <button class="key">Exp</button>
+
+      <!-- Row: 1 2 3 -->
+      <button class="key">1</button>
+      <button class="key">2</button>
+      <button class="key">3</button>
+      <button class="key w2">Ans</button>
+      <button class="key k-enter h2">=</button>
+
+      <!-- Row: 0 . +/- -->
+      <button class="key w2">0</button>
+      <button class="key">.</button>
+      <button class="key">( )</button>
+      <button class="key">,</button>
     </section>
   </main>
 
+  <!-- Optional JS hooks (UI only shown here) -->
   <script>
-    (function () {
-      const exprEl = document.getElementById('expression');
-      const resEl = document.getElementById('result');
-      const keys = document.querySelector('.keys');
-
-      let expr = '0';
-      let lastWasEquals = false;
-
-      function updateDisplay() {
-        exprEl.textContent = expr || '0';
-      }
-
-      function sanitize(input) {
-        // Map pretty ops to JS ops
-        return input
-          .replace(/÷/g, '/')
-          .replace(/×/g, '*')
-          .replace(/−/g, '-')
-          // Prevent leading multiple zeros like 0001
-          .replace(/(^|[^0-9])0+(\d)/g, '$1$2');
-      }
-
-      function computeSafe(input) {
-        const safe = sanitize(input);
-        // Allow only digits, + - * / . and spaces
-        if (!/^[\d+\-*/.\s]+$/.test(safe)) return 'Error';
-        // Prevent invalid sequences like multiple operators
-        if (/[*\/+\-]{2,}/.test(safe)) return 'Error';
-        // Disallow starting/ending with operator (except leading minus for negative)
-        if (/^[*/+]/.test(safe) || /[*\/+\-]$/.test(safe)) return 'Error';
-
-        try {
-          const value = Function('return (' + safe + ')')();
-          if (!isFinite(value)) return 'Error';
-          // Round to avoid floating-point artifacts
-          return Number(Math.round((value + Number.EPSILON) * 1e12) / 1e12).toString();
-        } catch {
-          return 'Error';
-        }
-      }
-
-      function appendNumber(n) {
-        if (lastWasEquals) {
-          expr = (n === '.') ? '0.' : n;
-          lastWasEquals = false;
-          return;
-        }
-        if (expr === '0' && n !== '.') {
-          expr = n;
-        } else {
-          // Prevent multiple decimals in the current number token
-          if (n === '.') {
-            const lastToken = expr.split(/[+\-×÷]/).pop();
-            if (lastToken.includes('.')) return;
-          }
-          expr += n;
-        }
-      }
-
-      function appendOp(op) {
-        lastWasEquals = false;
-        if (expr === '' || expr === '0') {
-          // Allow starting with minus for negatives
-          if (op === '−') expr = '−';
-          return;
-        }
-        // Replace trailing operator if present
-        if (/[+\-×÷]$/.test(expr)) {
-          // Allow changing operator directly
-          expr = expr.slice(0, -1) + op;
-        } else {
-          expr += op;
-        }
-      }
-
-      function clearAll() {
-        expr = '0';
-        resEl.textContent = '0';
-        lastWasEquals = false;
-      }
-
-      function backspace() {
-        if (lastWasEquals) {
-          clearAll();
-          return;
-        }
-        if (expr.length <= 1) {
-          expr = '0';
-        } else {
-          expr = expr.slice(0, -1);
-          // Avoid empty expression
-          if (expr === '' || expr === '−') expr = '0';
-        }
-      }
-
-      function equals() {
-        const out = computeSafe(expr);
-        resEl.textContent = out;
-        lastWasEquals = true;
-      }
-
-      // Click handling
-      keys.addEventListener('click', (e) => {
-        const btn = e.target.closest('button.key');
-        if (!btn) return;
-
-        const n = btn.getAttribute('data-num');
-        const op = btn.getAttribute('data-op');
-        const action = btn.getAttribute('data-action');
-
-        if (n !== null) {
-          appendNumber(n);
-          updateDisplay();
-          return;
-        }
-        if (op !== null) {
-          appendOp(op);
-          updateDisplay();
-          return;
-        }
-        if (action === 'clear') {
-          clearAll();
-          updateDisplay();
-          return;
-        }
-        if (action === 'backspace') {
-          backspace();
-          updateDisplay();
-          return;
-        }
-        if (action === 'equals') {
-          equals();
-          return;
-        }
-      });
-
-      // Keyboard support
-      window.addEventListener('keydown', (e) => {
-        const { key } = e;
-        if ((key >= '0' && key <= '9') || key === '.') {
-          appendNumber(key);
-          updateDisplay();
-          return;
-        }
-        if (key === '+' || key === '-' || key === '*' || key === '/') {
-          const pretty = key === '*' ? '×' : key === '/' ? '÷' : key === '-' ? '−' : '+';
-          appendOp(pretty);
-          updateDisplay();
-          return;
-        }
-        if (key === 'Enter' || key === '=') {
-          e.preventDefault();
-          equals();
-          return;
-        }
-        if (key === 'Backspace') {
-          backspace();
-          updateDisplay();
-          return;
-        }
-        if (key.toLowerCase() === 'c' || key === 'Escape') {
-          clearAll();
-          updateDisplay();
-        }
-      });
-
-      // Initial paint
-      updateDisplay();
-    })();
+    // Example hooks to update display later:
+    // document.querySelectorAll('.keys .key').forEach(btn => {
+    //   btn.addEventListener('click', () => { /* update #exp and #ans */ });
+    // });
   </script>
 </body>
 </html>
